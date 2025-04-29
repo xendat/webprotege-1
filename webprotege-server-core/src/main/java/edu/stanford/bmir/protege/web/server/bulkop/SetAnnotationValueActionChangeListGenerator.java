@@ -75,13 +75,25 @@ public class SetAnnotationValueActionChangeListGenerator implements ChangeListGe
 
     private void generateSetAnnotationValueChangesForOntology(OntologyChangeList.Builder<Set<OWLEntity>> builder,
                                                               OWLOntologyID ontId) {
+        // First, handle existing annotations
         entities.stream()
                 .filter(entity -> entitiesInSignature.containsEntityInSignature(entity, ontId))
                 .map(OWLEntity::getIRI)
                 .flatMap(subject -> annotationAssertionBySubject.getAxiomsForSubject(subject, ontId))
-                .filter(ax -> ax.getProperty()
-                                .equals(property))
+                .filter(ax -> ax.getProperty().equals(property))
                 .forEach(ax -> generateSetAnnotationValueChangesForAxiom(builder, ontId, ax));
+
+        // Then, add new annotations for entities that don't have them
+        entities.stream()
+                .filter(entity -> entitiesInSignature.containsEntityInSignature(entity, ontId))
+                .map(OWLEntity::getIRI)
+                .filter(subject -> !annotationAssertionBySubject.getAxiomsForSubject(subject, ontId)
+                        .anyMatch(ax -> ax.getProperty().equals(property)))
+                .forEach(subject -> {
+                    var newAx = dataFactory.getOWLAnnotationAssertionAxiom(property, subject, value);
+                    var addAxiom = AddAxiomChange.of(ontId, newAx);
+                    builder.add(addAxiom);
+                });
     }
 
     private void generateSetAnnotationValueChangesForAxiom(OntologyChangeList.Builder<Set<OWLEntity>> builder,

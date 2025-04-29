@@ -43,7 +43,10 @@
     -->
     <set-property name="user.agent" value="safari"/>
 
-    <set-property name="locale" value="en"/>
+    <!-- Configure locales -->
+    <extend-property name="locale" values="en"/>
+    <set-property-fallback name="locale" value="en"/>
+    <set-property name="gwt.i18n.fallbackLocale" value="en"/>
 
     <extend-configuration-property name="rpc.blacklist" value="+com.google.web.bindery.event.shared.Event"/>
 
